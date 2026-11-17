@@ -7,7 +7,7 @@
  *   4-5  unaffected
  *   6    psychopath  – permanent and incurable, never rolls again. Each later capture
  *                      earns a mandatory bonus move with the same piece (no chaining).
- *                      After 3 kills in total it gains bloodlust: it only moves to
+ *                      After 3 kills as a psycho (the 6-roll kill is #1) it gains bloodlust: it only moves to
  *                      capture, and will capture friendly pieces (never a king).
  * Absolution (cures remorseful and devastated pieces):
  *  - a healthy bishop (either colour) that moves to a square orthogonally next to
@@ -199,7 +199,7 @@
       info.roll = m.roll; info.reaction = reaction(m.roll); info.sq = sq;
       if (m.roll === 1) p.dev = DEV_TURNS;
       else if (m.roll <= 3) p.r = true;
-      else if (m.roll === 6) p.psy = true;
+      else if (m.roll === 6) { p.psy = true; p.k = 1; }   // only kills as a psycho count toward bloodlust
       if (p.t === 'B' && m.roll >= 4) cure(sq);          // a healthy bishop absolves on arrival
       return endTurn(n, c, m.roll === 1 ? sq : -1, test);
     }
