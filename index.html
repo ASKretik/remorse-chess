@@ -18,7 +18,9 @@
   <ul class="rules">
     <li>All normal chess rules apply.</li>
     <li>A piece that captures feels <b>remorse</b> <span class="ring-demo"></span> and can't capture again — and can't give check.</li>
-    <li>Remorse is lifted when <b>a bishop moves to a square orthogonally adjacent</b> (up, down, left, right — not diagonal) to the remorseful piece.</li>
+    <li>Remorse is lifted when <b>a bishop moves to a square orthogonally adjacent</b> (up, down, left, right — not diagonal) to the remorseful piece. Moving the remorseful piece next to a bishop doesn't count.</li>
+    <li>If your remorseful pieces already sit next to one of your bishops, you can spend your turn to have that bishop <b>absolve</b> them all instead of moving.</li>
+    <li>A remorseful bishop can't absolve anyone — but you can spend a turn to let it absolve itself.</li>
     <li>Capture again, and the remorse returns.</li>
   </ul>
   <h2>Start a new game?</h2>
@@ -41,6 +43,7 @@
   <aside class="side card">
     <div id="statusLine" class="status"></div>
     <div id="connLine" class="conn"></div>
+    <button id="absolveBtn" class="absolve" hidden></button>
     <div id="share" class="share" hidden>
       <label for="shareUrl">Send this link to your friend</label>
       <div class="row">
@@ -62,7 +65,7 @@
     </div>
     <details class="mini">
       <summary>Rules</summary>
-      <p>A capturing piece becomes remorseful (red ring): no captures, no check. Any bishop (either colour) landing orthogonally next to it lifts the remorse. Everything else is standard chess.</p>
+      <p>A capturing piece becomes remorseful (red ring): no captures, no check. Any non-remorseful bishop (either colour) moving to a square orthogonally next to it lifts the remorse at once. Instead of moving, you can spend your turn having one of your bishops absolve every remorseful piece orthogonally next to it (select the bishop, then press Absolve). A remorseful bishop absolves no one, but can spend a turn absolving itself. Everything else is standard chess.</p>
     </details>
   </aside>
 </div>

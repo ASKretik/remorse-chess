@@ -12,7 +12,7 @@
   let myColor = null;            // 'w' | 'b' | null (spectator)
   let game = { hostColor: 'w', moves: [], resigned: null, guestToken: null };
   let states, sans, keys;        // derived from game.moves
-  let view = 0, userFlip = false, selected = -1, legal = [], animatedAt = -1;
+  let view = 0, userFlip = false, selected = -1, legal = [], absMove = null, animatedAt = -1;
   let peer = null, guestConn = null, hostConn = null, conns = [];
   let token = null, retryTimer = null, connText = '';
 
@@ -42,8 +42,9 @@
       states.push(E.apply(s, m));
       keys.push(E.key(cur()));
     }
-    view = last(); selected = -1; legal = [];
+    view = last(); deselect();
   }
+  function deselect() { selected = -1; legal = []; absMove = null; }
 
   function gameStatus() {
     if (game.resigned) return { over: true, winner: E.opp(game.resigned), reason: 'resignation' };
@@ -164,8 +165,10 @@
   }
 
   function cureToast() {
-    const info = states[last()]._info;
-    if (info && info.cured.length) toast('A bishop lifted the remorse!');
+    const info = states[last()]._info, mv = game.moves[game.moves.length - 1];
+    if (!info || !info.cured.length) return;
+    if (mv && mv.from === mv.to && info.cured.length === 1 && info.cured[0] === mv.from) toast('The bishop absolved itself.');
+    else toast('A bishop lifted the remorse!');
   }
 
   /* ---------- rendering ---------- */
@@ -179,6 +182,8 @@
     const kSq = s.board.findIndex((p) => p && p.t === 'K' && p.c === s.turn);
     const showCheck = view > 0 && E.inCheck(s, s.turn);
     const curedNow = view > 0 && view !== animatedAt ? states[view]._info.cured : [];
+    const absNow = myTurn ? E.legalMoves(s).filter((m) => m.absolve).map((m) => m.from) : [];
+    const absTargets = absMove ? (absMove.absolve === 'self' ? [absMove.from] : E.apply(s, absMove)._info.cured) : [];
 
     for (let row = 0; row < 8; row++) for (let col = 0; col < 8; col++) {
       const rank = fl ? row : 7 - row, file = fl ? 7 - col : col, sq = rank * 8 + file;
@@ -198,6 +203,8 @@
         if (p.r) el.insertAdjacentHTML('beforeend', '<div class="ring" title="Remorseful — cannot capture"></div>');
       }
       if (curedNow.includes(sq)) el.classList.add('cured');
+      if (absNow.includes(sq) && sq !== selected) el.classList.add('canabs');
+      if (absTargets.includes(sq)) el.classList.add('abstgt');
       el.onclick = () => clickSq(sq);
       board.appendChild(el);
     }
@@ -241,6 +248,11 @@
       mv.appendChild(d);
     });
     mv.scrollTop = mv.scrollHeight;
+    const ab = $('#absolveBtn');
+    ab.hidden = !absMove;
+    if (absMove) ab.textContent = absMove.absolve === 'self'
+      ? 'Absolve this bishop (uses your turn)'
+      : `Absolve ${absTargets.length > 1 ? absTargets.length + ' pieces' : 'neighbour'} (uses your turn)`;
     $('#resignBtn').hidden = st.over || !myColor;
     $('#rematchBtn').hidden = !st.over || !myColor;
     $('#firstBtn').disabled = $('#prevBtn').disabled = view === 0;
@@ -248,7 +260,7 @@
     document.title = (myTurn ? '● ' : '') + 'Remorse Chess';
   }
 
-  function go(i) { view = Math.max(0, Math.min(last(), i)); selected = -1; legal = []; animatedAt = -1; render(); }
+  function go(i) { view = Math.max(0, Math.min(last(), i)); deselect(); animatedAt = -1; render(); }
 
   function clickSq(sq) {
     const s = cur();
@@ -260,12 +272,14 @@
     }
     const p = s.board[sq];
     if (p && p.c === myColor && sq !== selected) {
-      selected = sq; legal = E.legalMoves(s).filter((m) => m.from === sq);
-      if (p.r) toast('This piece feels remorse — it can\'t capture until a bishop steps next to it.');
-    } else { selected = -1; legal = []; }
+      const mine = E.legalMoves(s).filter((m) => m.from === sq);
+      selected = sq; legal = mine.filter((m) => !m.absolve); absMove = mine.find((m) => m.absolve) || null;
+      if (p.r && p.t === 'B') toast('This bishop feels remorse — it can\'t capture or absolve others until it absolves itself.');
+      else if (p.r) toast('This piece feels remorse — it can\'t capture until a bishop absolves it.');
+    } else deselect();
     render();
   }
-  function play(m) { selected = -1; legal = []; act({ type: 'move', from: m.from, to: m.to, promo: m.promo || null }); if (!isHost) render(); }
+  function play(m) { deselect(); act({ type: 'move', from: m.from, to: m.to, promo: m.promo || null }); if (!isHost) render(); }
   function askPromo(opts) {
     const box = $('#promoBox'); box.innerHTML = '';
     opts.forEach((m) => {
@@ -283,6 +297,7 @@
   $('#nextBtn').onclick = () => go(view + 1);
   $('#lastBtn').onclick = () => go(last());
   $('#flipBtn').onclick = () => { userFlip = !userFlip; render(); };
+  $('#absolveBtn').onclick = () => absMove && play(absMove);
   $('#resignBtn').onclick = () => confirm('Resign this game?') && act({ type: 'resign' });
   $('#rematchBtn').onclick = () => act({ type: 'rematch' });
   $('#copyBtn').onclick = async () => {

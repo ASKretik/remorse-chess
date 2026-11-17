@@ -7,7 +7,9 @@ Chess where every capture leaves the capturing piece full of remorse.
 ## Rules
 1. Every rule of chess applies.
 2. When a piece captures, it feels **remorse** (shown with a red ring). A remorseful piece cannot capture, and therefore cannot give check either.
-3. Remorse is lifted when a **bishop moves to a square orthogonally adjacent** (up/down/left/right, not diagonal) to the remorseful piece. Any bishop works, of either colour. Capture again and the remorse returns.
+3. Remorse is lifted when a **bishop moves to a square orthogonally adjacent** (up/down/left/right, not diagonal) to the remorseful piece. Any bishop works, of either colour, and the absolution is instant (it's part of that move). The remorseful piece moving next to a bishop does not count. Capture again and the remorse returns.
+4. **Absolving in place:** if remorseful pieces already sit orthogonally next to one of your bishops at the start of your turn, you may spend the turn having that bishop absolve all of them. Nothing moves.
+5. **Remorseful bishops** can't absolve anyone, by moving or in place. You may spend a turn to have a remorseful bishop absolve itself. A bishop that captures becomes remorseful straight away, so it absolves nothing on that move.
 
 ## How multiplayer works
 Click **Yes, generate a game** to get a shareable link. Your friend opens it and joins as the opponent. Moves go directly between browsers (WebRTC via [PeerJS](https://peerjs.com)), so there is no game server. Notes:

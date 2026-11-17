@@ -1,8 +1,16 @@
 /* Remorse Chess engine.
  * Standard chess + remorse: a piece that captures becomes remorseful and cannot
- * capture (nor give check) until a bishop moves orthogonally next to it.
+ * capture (nor give check) until it is absolved by a bishop:
+ *  - a non-remorseful bishop (either colour) that moves to a square orthogonally
+ *    next to remorseful pieces absolves them instantly (the piece moving next to
+ *    a bishop does not count);
+ *  - instead of moving, a player may spend the turn having one of their own
+ *    non-remorseful bishops absolve every remorseful piece orthogonally next to it;
+ *  - a remorseful bishop has no absolving power; its owner may spend a turn to
+ *    absolve the bishop itself.
  * Board: array of 64, index = rank*8 + file, rank 0 = White's back rank (a1 = 0).
  * Piece: {t:'PNBRQK', c:'w'|'b', r:boolean}
+ * Absolve move: {from: bishopSq, to: bishopSq, absolve: 'adj' | 'self'}
  */
 (function (root) {
   const KN = [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]];
@@ -13,6 +21,17 @@
   const inb = (f, r) => f >= 0 && f < 8 && r >= 0 && r < 8;
   const opp = (c) => (c === 'w' ? 'b' : 'w');
   const sqName = (i) => 'abcdefgh'[i & 7] + ((i >> 3) + 1);
+
+  // Squares orthogonally next to `sq` holding a remorseful piece (either colour).
+  function remorsefulNeighbours(b, sq) {
+    const f = sq & 7, r = sq >> 3, out = [];
+    for (const [df, dr] of OR) {
+      if (!inb(f + df, r + dr)) continue;
+      const i = (r + dr) * 8 + f + df;
+      if (b[i] && b[i].r) out.push(i);
+    }
+    return out;
+  }
 
   function newGame(opts) {
     const b = new Array(64).fill(null);
@@ -123,12 +142,29 @@
         }
       }
     }
+    // Absolution in place (costs the turn, nothing moves).
+    if (s.remorse) for (let i = 0; i < 64; i++) {
+      const p = b[i];
+      if (!p || p.c !== c || p.t !== 'B') continue;
+      if (p.r) add(i, i, { absolve: 'self' });
+      else if (remorsefulNeighbours(b, i).length) add(i, i, { absolve: 'adj' });
+    }
     return out;
   }
 
   // Applies move, returns new state (does not mutate input).
   function apply(s, m) {
     const n = clone(s), b = n.board, p = b[m.from], c = s.turn;
+    if (m.absolve) {
+      const cured = m.absolve === 'self' ? [m.from] : remorsefulNeighbours(b, m.from);
+      for (const i of cured) b[i].r = false;
+      n.ep = -1;
+      n.half = s.half + 1;
+      if (c === 'b') n.full++;
+      n.turn = opp(c);
+      n._info = { captured: null, cured };
+      return n;
+    }
     const captured = m.ep ? b[(m.from >> 3) * 8 + (m.to & 7)] : b[m.to];
     if (m.ep) b[(m.from >> 3) * 8 + (m.to & 7)] = null;
     b[m.to] = p; b[m.from] = null;
@@ -144,15 +180,11 @@
     for (const [sq, key] of [[0, 'wQ'], [7, 'wK'], [56, 'bQ'], [63, 'bK']])
       if (m.from === sq || m.to === sq) n.castle[key] = false;
     n.ep = m.dbl ? (m.from + m.to) / 2 : -1;
-    // cure: a bishop landing orthogonally next to remorseful pieces
+    // cure: a non-remorseful bishop landing orthogonally next to remorseful pieces.
+    // A bishop that was remorseful, or just became so by capturing, absolves nothing.
     const cured = [];
-    if (s.remorse && p.t === 'B') {
-      const f = m.to & 7, r = m.to >> 3;
-      for (const [df, dr] of OR) {
-        if (!inb(f + df, r + dr)) continue;
-        const q = b[(r + dr) * 8 + f + df];
-        if (q && q.r) { q.r = false; cured.push((r + dr) * 8 + f + df); }
-      }
+    if (s.remorse && p.t === 'B' && !p.r) {
+      for (const i of remorsefulNeighbours(b, m.to)) { b[i].r = false; cured.push(i); }
     }
     n.half = captured || s.board[m.from].t === 'P' ? 0 : s.half + 1;
     if (c === 'b') n.full++;
@@ -196,6 +228,7 @@
 
   function san(s, m, moves) {
     const p = s.board[m.from];
+    if (m.absolve) return 'B' + sqName(m.from) + (m.absolve === 'self' ? ' repents' : ' absolves') + suffix(s, m);
     if (m.castle) return (m.castle === 'K' ? 'O-O' : 'O-O-O') + suffix(s, m);
     let t = p.t === 'P' ? '' : p.t;
     if (p.t !== 'P') {
