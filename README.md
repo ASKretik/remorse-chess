@@ -28,3 +28,6 @@ Static site, no build step: `python3 -m http.server` and open `index.html`. `eng
 
 ## Credits
 Piece graphics: "cburnett" set by Colin M.L. Burnett (GPLv2+ / BSD / GFDL), via Lichess. Board colours follow the familiar green/cream style.
+
+## Authors
+Created by [ASKretik](https://github.com/ASKretik). Die-roll reactions, absolution and psychopath rules by [coder-r2](https://github.com/coder-r2).
