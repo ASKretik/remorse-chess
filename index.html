@@ -17,11 +17,17 @@
   <p class="tag">Chess, but every capture haunts the capturer.</p>
   <ul class="rules">
     <li>All normal chess rules apply.</li>
-    <li>A piece that captures feels <b>remorse</b> <span class="ring-demo"></span> and can't capture again — and can't give check.</li>
-    <li>Remorse is lifted when <b>a bishop moves to a square orthogonally adjacent</b> (up, down, left, right — not diagonal) to the remorseful piece. Moving the remorseful piece next to a bishop doesn't count.</li>
-    <li>If your remorseful pieces already sit next to one of your bishops, you can spend your turn to have that bishop <b>absolve</b> them all instead of moving.</li>
-    <li>A remorseful bishop can't absolve anyone — but you can spend a turn to let it absolve itself.</li>
-    <li>Capture again, and the remorse returns.</li>
+    <li>After every capture the killer <b>rolls a die</b> to see how it takes it:
+      <ul class="react">
+        <li><span class="ring-demo dev"></span><b>1 · Devastated</b> — can't move or give check. Absolve it within 3 of your turns or it ends itself.</li>
+        <li><span class="ring-demo rem"></span><b>2–3 · Remorseful</b> — can't capture or give check until absolved.</li>
+        <li><span class="ring-demo none"></span><b>4–5 · Unfazed</b> — carries on as normal.</li>
+        <li><span class="ring-demo psy"></span><b>6 · Psychopath</b> — permanent, never rolls again. Each kill earns it one extra move (no chaining). After 3 kills it gets <span class="ring-demo blood"></span><b>bloodlust</b>: it only moves to capture, and will kill its own side.</li>
+      </ul>
+    </li>
+    <li><b>Absolution:</b> a bishop that moves to a square orthogonally next to (up, down, left, right) a remorseful or devastated piece absolves it instantly. The piece moving next to a bishop doesn't count.</li>
+    <li>Instead of moving, you can spend your turn having one of your bishops absolve every afflicted piece next to it.</li>
+    <li>An afflicted bishop can't absolve anyone, but you can spend a turn to let it absolve itself.</li>
   </ul>
   <h2>Start a new game?</h2>
   <div class="colorpick" role="radiogroup" aria-label="Your colour">
@@ -37,12 +43,22 @@
 <div id="game" hidden>
   <section class="boardwrap">
     <div class="bar" id="barTop"></div>
-    <div id="board" class="board"></div>
+    <div class="boardbox">
+      <div id="board" class="board"></div>
+      <div id="fx" class="fx"></div>
+    </div>
     <div class="bar" id="barBot"></div>
   </section>
   <aside class="side card">
     <div id="statusLine" class="status"></div>
     <div id="connLine" class="conn"></div>
+    <div id="dice" class="dice" hidden>
+      <div id="dieFace" class="dieface">?</div>
+      <div class="dietext">
+        <div id="dieText"></div>
+        <button id="rollBtn" class="primary" hidden>🎲 Roll the die</button>
+      </div>
+    </div>
     <button id="absolveBtn" class="absolve" hidden></button>
     <div id="share" class="share" hidden>
       <label for="shareUrl">Send this link to your friend</label>
@@ -65,7 +81,8 @@
     </div>
     <details class="mini">
       <summary>Rules</summary>
-      <p>A capturing piece becomes remorseful (red ring): no captures, no check. Any non-remorseful bishop (either colour) moving to a square orthogonally next to it lifts the remorse at once. Instead of moving, you can spend your turn having one of your bishops absolve every remorseful piece orthogonally next to it (select the bishop, then press Absolve). A remorseful bishop absolves no one, but can spend a turn absolving itself. Everything else is standard chess.</p>
+      <p>Every capture makes the killer roll a die: <b>1</b> <span class="ring-demo dev"></span> devastated (can't move; absolve within 3 turns or it ends itself), <b>2–3</b> <span class="ring-demo rem"></span> remorseful (can't capture), <b>4–5</b> unfazed, <b>6</b> <span class="ring-demo psy"></span> psychopath (an extra move after each kill; after 3 kills <span class="ring-demo blood"></span> bloodlust: it only moves to capture, friend or foe). Devastated and remorseful pieces give no check.</p>
+      <p>A healthy bishop (either colour) moving orthogonally next to an afflicted piece absolves it. Or spend your turn letting one of your bishops absolve everything next to it (select it, press Absolve). An afflicted bishop can only absolve itself. Everything else is standard chess.</p>
     </details>
   </aside>
 </div>
