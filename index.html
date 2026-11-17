@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Remorse Chess</title>
+<meta name="description" content="Chess where every capture leaves the capturing piece full of remorse. Play a friend via a shareable link.">
+<link rel="icon" href="pieces/wB.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Lobby -->
+<main id="lobby" class="card">
+  <img class="logo" src="pieces/bB.svg" alt="">
+  <h1>Remorse Chess</h1>
+  <p class="tag">Chess, but every capture haunts the capturer.</p>
+  <ul class="rules">
+    <li>All normal chess rules apply.</li>
+    <li>A piece that captures feels <b>remorse</b> <span class="ring-demo"></span> and can't capture again — and can't give check.</li>
+    <li>Remorse is lifted when <b>a bishop moves to a square orthogonally adjacent</b> (up, down, left, right — not diagonal) to the remorseful piece.</li>
+    <li>Capture again, and the remorse returns.</li>
+  </ul>
+  <h2>Start a new game?</h2>
+  <div class="colorpick" role="radiogroup" aria-label="Your colour">
+    <label><input type="radio" name="col" value="r" checked> Random</label>
+    <label><input type="radio" name="col" value="w"> White</label>
+    <label><input type="radio" name="col" value="b"> Black</label>
+  </div>
+  <button id="createBtn" class="primary">Yes, generate a game</button>
+  <p class="fine">You'll get a link to send to your friend. Keep your tab open while you play.</p>
+</main>
+
+<!-- Game -->
+<div id="game" hidden>
+  <section class="boardwrap">
+    <div class="bar" id="barTop"></div>
+    <div id="board" class="board"></div>
+    <div class="bar" id="barBot"></div>
+  </section>
+  <aside class="side card">
+    <div id="statusLine" class="status"></div>
+    <div id="connLine" class="conn"></div>
+    <div id="share" class="share" hidden>
+      <label for="shareUrl">Send this link to your friend</label>
+      <div class="row">
+        <input id="shareUrl" readonly>
+        <button id="copyBtn">Copy</button>
+      </div>
+    </div>
+    <div id="moves" class="moves"></div>
+    <div class="nav">
+      <button id="firstBtn" title="Start">⏮</button>
+      <button id="prevBtn" title="Back">◀</button>
+      <button id="nextBtn" title="Forward">▶</button>
+      <button id="lastBtn" title="Live">⏭</button>
+      <button id="flipBtn" title="Flip board">⇅</button>
+    </div>
+    <div class="actions">
+      <button id="resignBtn" class="danger">Resign</button>
+      <button id="rematchBtn" class="primary" hidden>Rematch (swap colours)</button>
+    </div>
+    <details class="mini">
+      <summary>Rules</summary>
+      <p>A capturing piece becomes remorseful (red ring): no captures, no check. Any bishop (either colour) landing orthogonally next to it lifts the remorse. Everything else is standard chess.</p>
+    </details>
+  </aside>
+</div>
+
+<div id="promo" class="modal" hidden><div class="card" id="promoBox"></div></div>
+<div id="toast" class="toast" hidden></div>
+<div id="fatal" class="card fatal" hidden></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
